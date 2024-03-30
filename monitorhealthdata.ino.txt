@@ -1,0 +1,86 @@
+#include <LiquidCrystal_I2C.h>
+#include <SoftwareSerial.h>
+#include <dht11.h>
+#define RX 2 
+#define TX 3
+#define dht_apin 11
+#define MQ2PIN A1
+#define MQ135PIN A3
+dht11 dhtObject;
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+String AP = "networkname";       
+String PASS = "xxxxx"; 
+String API = "YOURAPINUMBER";   
+String HOST = "api.thingspeak.com";
+String PORT = "80";
+int countTrueCommand;
+int countTimeCommand; 
+boolean found = false; 
+int valSensor = 1;
+  
+SoftwareSerial esp8266(RX,TX); 
+  void setup() {
+  Serial.begin(9600);
+  esp8266.begin(115200);
+  lcd.init();
+  lcd.clear();
+  lcd.backlight();
+  lcd.setCursor(1, 0);
+  lcd.print("Environment");
+  lcd.setCursor(1, 1);
+  lcd.print("Monitoring...");
+  delay(4000);
+  }
+void loop() {
+  String getData = "GET /update?api_key="+ API +"&field1="+getGasValue()+"&field2="+getAirQualityValue()+"&field3="+getTemperatureValue()+"&field4="+getHumidityValue();
+  lcd.clear();
+  lcd.setCursor(1, 0);
+  lcd.print("Temp: "+getTemperatureValue()+"C"); 
+  lcd.setCursor(1, 1);
+  lcd.print("Humidity: "+getHumidityValue() + "%");
+  delay(4000);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Smoke:" + getGasValue() +"ppm");
+  lcd.setCursor(0, 1);
+  lcd.print("AirQlt:" + getAirQualityValue()+"ppm");
+  delay(4000);
+
+}
+
+String getGasValue(){
+  float mq2_value = analogRead(MQ2PIN);
+  Serial.print("GasValue= ");
+  Serial.println(mq2_value); 
+  delay(50);
+  return String(mq2_value); 
+}
+
+String getAirQualityValue(){
+  float mq135_value = analogRead(MQ135PIN);
+  Serial.print(" AirQuality= ");
+  Serial.println(mq135_value); 
+  delay(50);
+  return String(mq135_value); 
+}
+
+String getTemperatureValue(){
+  dhtObject.read(dht_apin);
+  Serial.print(" Temperature(C)= ");
+  int temp = dhtObject.temperature;
+  Serial.println(temp); 
+  delay(50);
+  return String(temp); 
+
+  }
+
+String getHumidityValue(){
+  dhtObject.read(dht_apin);
+  Serial.print(" Humidity in %= ");
+  int humidity = dhtObject.humidity;
+  Serial.println(humidity);
+  delay(50);
+  return String(humidity);
+ }
+
